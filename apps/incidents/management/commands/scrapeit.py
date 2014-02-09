@@ -164,15 +164,25 @@ class Command(BaseCommand):
 
 				
 				people = i[22].strip()
-			#	print ('PEOPLE THIS IS THE START OF PEOPLE \n %s \n AND THIS IS THE END OF THE PEOPLE SELECTOR!!!' % people)
+				print people
+				print '\n\n\n\n\n'
 				arrests = i[26].strip()
 				arrests += i[27].strip()
 				#print arrests
 
+				#location is interesting because I'm eventually going to geocode these.
+		#		location_import, location_created = Location.objects.get_or_create(
+		#			address = location
+		#			)
+
+		#		officer_import, officer_created = Officer.objects.get_or_create(
+		#			name = reporting_officer
+		#			)
 
 				#arrest_pattern = re.compile('(.*)(AGE: )(\d+)\s+(SEX: )(M|F)(\s+)(.*)\n(.*)(CHARGE: )(\w+)\s+(.*)\n(.*)(AT: )(.*)(BY: )(.*)')
 				arrest_pattern = re.compile('(.*)(AGE: )(\d+)\s+(SEX: )(M|F)(\s+)(.*)\n(.*)(CHARGE: )(\w+)\s+(.*)\n(.*)(AT: )(.*)(BY: )(.*)')
 				arrests_re = arrest_pattern.findall(arrests)
+				#this is difficult to get my mind around. 
 				for a in arrests_re:
 					arrestee = 	clean(a[0].strip())
 					age = 		clean(a[2].strip())
@@ -183,8 +193,10 @@ class Command(BaseCommand):
 					arrest_location = clean(a[13].strip())
 					arresting_officer = clean(a[15].strip())
 
-					print arresting_officer
-					print arrest_location
+
+
+					#print arresting_officer
+					#print arrest_location
 					#print a
 
 
