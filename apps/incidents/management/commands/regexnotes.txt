@@ -24,7 +24,7 @@ Why does it do that? There's a lot of breaking on whether there's people, not pr
 (.|\n)*?)
 (SUMMARY: )
 (
-(.|\n)*?)
+(.|\n)*?)	
 (
 (PROPERTY: )
 (

@@ -24,7 +24,7 @@ list_date = []
 today = datetime.date.today()
 list_date.append(today)
 directory = os.path.join(working_dir, str(list_date[0]))
-print directory
+#print directory
 class Command(BaseCommand):
 
 	def handle(self, *args, **options):
@@ -44,8 +44,8 @@ class Command(BaseCommand):
 
 		#but let's work with a test case for now. 
 
-#		self.get_pdfs()
-#		self.convert_to_text()
+		#self.get_pdfs()
+		#self.convert_to_text()
 		self.load_into_db()
 
 	#def get_most_recent_pdf(self):
@@ -93,11 +93,9 @@ class Command(BaseCommand):
 
 		#first check to see if it has been turned into text
 
-
-
 	
 	def load_into_db(self):			
-		
+	#	print "i'm in it."
 		def clean(string):
 			line = re.compile('\n')
 			excess_spaces = re.compile('\s{2,}')
@@ -106,9 +104,10 @@ class Command(BaseCommand):
 
 			return string
 		
-		#print "i'm in something"
+	#	print "i'm in something"
 		text_files = glob.glob(directory + '/*.txt')
-	#	print text_files
+
+		#print text_files
 		for t in text_files:
 			#print t
 			with open (t, "r") as livefile:
@@ -131,7 +130,7 @@ class Command(BaseCommand):
 
 			j = 0
 			#write function that eats extra whitespace characters. 
-
+			print 'still in'
 			for i in incidents:
 		#		print i
 				j += 1
@@ -143,9 +142,11 @@ class Command(BaseCommand):
 #				print description
 				location = clean(i[4].strip())
 #				print location
-				datetime_occurred = clean(clean(i[7].strip()))
+				#print location
+				datetime_occurred = strptime(clean(i[7].strip()),'%m/%d/%Y %I:%M')
+			#	print datetime_occurred
 #				print datetime_occurred
-				datetime_reported = clean(i[9].strip())
+				datetime_reported = strptime(clean(i[9].strip()), '%m/%d/%Y %I:%M')
 #				print datetime_reported
 				reporting_officer = clean(i[12].strip())
 #				print reporting_officer
@@ -164,13 +165,13 @@ class Command(BaseCommand):
 
 				
 				people = i[22].strip()
-				print people
-				print '\n\n\n\n\n'
+			#	print people
+			#	print '\n\n\n\n\n'
 				arrests = i[26].strip()
 				arrests += i[27].strip()
 				#print arrests
 
-				#location is interesting because I'm eventually going to geocode these.
+		#location is interesting because I'm eventually going to geocode these.
 		#		location_import, location_created = Location.objects.get_or_create(
 		#			address = location
 		#			)
@@ -183,6 +184,32 @@ class Command(BaseCommand):
 				arrest_pattern = re.compile('(.*)(AGE: )(\d+)\s+(SEX: )(M|F)(\s+)(.*)\n(.*)(CHARGE: )(\w+)\s+(.*)\n(.*)(AT: )(.*)(BY: )(.*)')
 				arrests_re = arrest_pattern.findall(arrests)
 				#this is difficult to get my mind around. 
+
+				incident_crime, incident_created = Crime.objects.get_or_create(
+					#does description need further parsing?
+					name = description
+					)
+		#		print incident_crime
+
+				incident_location, incident_location_bool = Location.objects.get_or_create(
+					address = location
+					)
+				
+				incident_officer, io_bool = Officer.objects.get_or_create(
+					name = reporting_officer
+					)
+				print summary
+				incident_import, incident_created = Incident.objects.get_or_create(
+					code = code,
+					datetime_occurred = strftime(datetime_occurred),
+					datetime_reported = strftime(datetime_reported),
+					summary = summary,
+					officer = incident_officer,
+					location_occurred = incident_location,
+					crimes = incident_crime
+					)
+				print incident_import
+
 				for a in arrests_re:
 					arrestee = 	clean(a[0].strip())
 					age = 		clean(a[2].strip())
@@ -193,11 +220,46 @@ class Command(BaseCommand):
 					arrest_location = clean(a[13].strip())
 					arresting_officer = clean(a[15].strip())
 
+#					print arrestee
+#					print age
+#					print sex
+#					print address
+#					print charge_text
+#					print charge_code
+#					print arrest_location
+#					print arresting_officer
+#					print "\n\n\n"
+					
+					crime_import, crime_bool = Crime.objects.get_or_create(
+						name = charge_text,
+						code = charge_code
+						)
+					print crime_import
+					address_import, address_bool = Location.objects.get_or_create(
+						address = address
+						)
+					arrestee_import, arrestee_bool = Arrestee.objects.get_or_create(
+						name = arrestee,
+						age = age,
+						sex = sex,
+						address = address_import
+						)
+
+					arrest_import, arrest_bool = Arrest.objects.get_or_create(
+						arrestee = arrestee_import,
+						location = location_import,
+						datetime = datetime_occurred
+
+						)
+					print arrestee_import
+					arrest_import.charges.add(crime_import)
+					arrest_import.save()
+
+					incident_import.crimes.add(arrest_import)
+					incident_import.save()
 
 
-					#print arresting_officer
-					#print arrest_location
-					#print a
+
 
 
 

@@ -23,8 +23,14 @@ class Property(models.Model):
 	def __unicode__(self):
 		return self.thing
 
+class Agency(models.Model):
+	name = models.CharField(max_length = 30)
+
 class Officer(models.Model):
 	name = models.CharField(max_length = 70)
+	badge_number = models.IntegerField(null = True)
+
+
 	def __unicode__(self):
 		return self.name
 class Race(models.Model):
@@ -50,11 +56,25 @@ class Arrestee(models.Model):
 	address = models.ForeignKey(Location, null = True)
 	race = models.ForeignKey(Race)
 
+	def __unicode__(self):
+		return self.name
 
 class Arrest(models.Model):
 	arrestee = models.ForeignKey(Arrestee)
 	charges = models.ManyToManyField(Crime)
 	location = models.ForeignKey(Location)
+	officer = models.ForeignKey(Officer, null = True)
+	datetime = models.DateTimeField(null = True)
+
+	def __unicode__(self):
+		return self.arrestee.name
+
+	def save(self, *args, **kwargs):
+      
+		super(Arrest, self).save(*args, **kwargs)		
+
+
+
 
 class Incident(models.Model):
 	#native
@@ -73,7 +93,8 @@ class Incident(models.Model):
 	offenders = models.ManyToManyField(Offender, null = True)
 	properties = models.ManyToManyField(Property, null = True)
 
-	
+	def save(self, *args, **kwargs):
+		super(Incident, self).save(*args, **kwargs)			
 
 
 
