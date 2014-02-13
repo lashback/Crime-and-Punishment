@@ -12,7 +12,7 @@ class Location(models.Model):
 
 #infraction?
 class Crime(models.Model):
-	name = models.CharField(max_length = 50)
+	name = models.CharField(max_length = 255)
 	code = models.CharField(max_length= 50)
 	def __unicode__(self):
 		return self.name
@@ -29,8 +29,6 @@ class Agency(models.Model):
 class Officer(models.Model):
 	name = models.CharField(max_length = 70)
 	badge_number = models.IntegerField(null = True)
-
-
 	def __unicode__(self):
 		return self.name
 class Race(models.Model):
@@ -54,7 +52,7 @@ class Arrestee(models.Model):
 	age = models.IntegerField(default = 0)
 	sex = models.CharField(max_length=2, null = True)
 	address = models.ForeignKey(Location, null = True)
-	race = models.ForeignKey(Race)
+	race = models.ForeignKey(Race, null = True, blank = True)
 
 	def __unicode__(self):
 		return self.name
@@ -70,7 +68,6 @@ class Arrest(models.Model):
 		return self.arrestee.name
 
 	def save(self, *args, **kwargs):
-      
 		super(Arrest, self).save(*args, **kwargs)		
 
 
@@ -93,6 +90,8 @@ class Incident(models.Model):
 	offenders = models.ManyToManyField(Offender, null = True)
 	properties = models.ManyToManyField(Property, null = True)
 
+	def __unicode__(self):
+		
 	def save(self, *args, **kwargs):
 		super(Incident, self).save(*args, **kwargs)			
 

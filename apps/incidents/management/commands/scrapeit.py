@@ -117,8 +117,10 @@ class Command(BaseCommand):
 			strip_headers = re.sub(header_pattern,'', data)
 		#	print strip_headers
 			#print strip_headers
-
-			pattern = re.compile('(?=(\d{5}\s+)((.|\n)*?)(LOCATION: )((.|\n)*?)(OCCURRED: )(.*?)(REPORTED: )((.|\n)*?)(OFFICER: )((.|\n)*?)(SUMMARY: )((.|\n)*?)((PROPERTY: )((.|\n)*?))?(PEOPLE: )((.|\n)*?)((ARRESTS: )((.|\n)*?))?(C\d{2}-\d{5}|\Z))')
+			print strip_headers
+			pattern = re.compile('(?=(\d{5}\s+)((.|\n)*?)(LOCATION: )((.|\n)*?)(OCCURRED:)(.*?)(REPORTED:)((.|\n)*?)(OFFICER: )((.|\n)*?)(SUMMARY: )((.|\n)*?)((PROPERTY: )((.|\n)*?))?(PEOPLE: )((.|\n)*?)((ARRESTS: )((.|\n)*?))?(C\d{2}-\d{5}|\Z))')
+			#pattern = re.compile('(?=(\d{5}\s+)((.|\n)*?)(LOCATION: )((.|\n)*?)(((OCCURRED: )(.*?))|((REPORTED: )((.|\n)*?)))(((OCCURRED: )(.*?))|((REPORTED: )((.|\n)*?)))(OFFICER: )((.|\n)*?)(SUMMARY: )((.|\n)*?)((PROPERTY: )((.|\n)*?))?(PEOPLE: )((.|\n)*?)((ARRESTS: )((.|\n)*?))?(C\d{2}-\d{5}|\Z))')
+			
 			#currently, when people is NOT followed by an arrest, shit goes to shit. 
 	#with properties.. (nonfunctional)
 	#(?=(\d{5}\s+)((.|\n)*?)(LOCATION: )((.|\n)*?)(OCCURRED: )(.*?)(REPORTED: )((.|\n)*?)(OFFICER: )((.|\n)*?)(SUMMARY: )((.|\n)*?)((PROPERTY: )((.|\n)*?))?(PEOPLE: )((.|\n)*?)((ARRESTS: )((.|\n)*?))?(C13-\d{5}|\Z))
@@ -141,12 +143,14 @@ class Command(BaseCommand):
 				description = clean(i[1].strip())
 #				print description
 				location = clean(i[4].strip())
-#				print location
+				print ("location: %s" % location)
 				#print location
-				datetime_occurred = strptime(clean(i[7].strip()),'%m/%d/%Y %I:%M')
+				#print location
+				datetime_occurred = datetime.datetime.strptime(clean(i[7].strip()),'%m/%d/%Y %H:%M')
 			#	print datetime_occurred
 #				print datetime_occurred
-				datetime_reported = strptime(clean(i[9].strip()), '%m/%d/%Y %I:%M')
+				datetime_reported = datetime.datetime.strptime(clean(i[9].strip()), '%m/%d/%Y %H:%M')
+
 #				print datetime_reported
 				reporting_officer = clean(i[12].strip())
 #				print reporting_officer
@@ -201,14 +205,19 @@ class Command(BaseCommand):
 				print summary
 				incident_import, incident_created = Incident.objects.get_or_create(
 					code = code,
-					datetime_occurred = strftime(datetime_occurred),
-					datetime_reported = strftime(datetime_reported),
+					datetime_occurred = datetime_occurred,
+					datetime_reported = datetime_reported,			
+					#datetime_occurred = datetime_occurred.strftime( '%Y-%m-%d %H:%M:%S'),
+					#datetime_reported = datetime_reported.strftime('%Y-%m-%d %H:%M:%S'),
 					summary = summary,
 					officer = incident_officer,
 					location_occurred = incident_location,
-					crimes = incident_crime
+#					crimes = incident_crime
 					)
 				print incident_import
+
+				incident_import.crimes.add(incident_crime)
+				incident_import.save()
 
 				for a in arrests_re:
 					arrestee = 	clean(a[0].strip())
@@ -220,7 +229,7 @@ class Command(BaseCommand):
 					arrest_location = clean(a[13].strip())
 					arresting_officer = clean(a[15].strip())
 
-#					print arrestee
+					print arrestee
 #					print age
 #					print sex
 #					print address
@@ -238,16 +247,19 @@ class Command(BaseCommand):
 					address_import, address_bool = Location.objects.get_or_create(
 						address = address
 						)
+
 					arrestee_import, arrestee_bool = Arrestee.objects.get_or_create(
 						name = arrestee,
 						age = age,
 						sex = sex,
 						address = address_import
 						)
-
+					arrest_location_import, arcreated = Location.objects.get_or_create(
+						address = arrest_location
+						)
 					arrest_import, arrest_bool = Arrest.objects.get_or_create(
 						arrestee = arrestee_import,
-						location = location_import,
+						location = arrest_location_import,
 						datetime = datetime_occurred
 
 						)
@@ -255,7 +267,7 @@ class Command(BaseCommand):
 					arrest_import.charges.add(crime_import)
 					arrest_import.save()
 
-					incident_import.crimes.add(arrest_import)
+					incident_import.arrests.add(arrest_import)
 					incident_import.save()
 
 
