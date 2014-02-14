@@ -8,7 +8,7 @@ import os
 from BeautifulSoup import BeautifulSoup
 #import lxml.html, urllib2, urlparse
 import glob
-
+#from django import DatabaseError
 
 from time import strptime, strftime
 from string import split
@@ -117,7 +117,7 @@ class Command(BaseCommand):
 			strip_headers = re.sub(header_pattern,'', data)
 		#	print strip_headers
 			#print strip_headers
-			print strip_headers
+	#		print strip_headers
 			pattern = re.compile('(?=(\d{5}\s+)((.|\n)*?)(LOCATION: )((.|\n)*?)(OCCURRED:)(.*?)(REPORTED:)((.|\n)*?)(OFFICER: )((.|\n)*?)(SUMMARY: )((.|\n)*?)((PROPERTY: )((.|\n)*?))?(PEOPLE: )((.|\n)*?)((ARRESTS: )((.|\n)*?))?(C\d{2}-\d{5}|\Z))')
 			#pattern = re.compile('(?=(\d{5}\s+)((.|\n)*?)(LOCATION: )((.|\n)*?)(((OCCURRED: )(.*?))|((REPORTED: )((.|\n)*?)))(((OCCURRED: )(.*?))|((REPORTED: )((.|\n)*?)))(OFFICER: )((.|\n)*?)(SUMMARY: )((.|\n)*?)((PROPERTY: )((.|\n)*?))?(PEOPLE: )((.|\n)*?)((ARRESTS: )((.|\n)*?))?(C\d{2}-\d{5}|\Z))')
 			
@@ -134,141 +134,154 @@ class Command(BaseCommand):
 			#write function that eats extra whitespace characters. 
 			print 'still in'
 			for i in incidents:
-		#		print i
-				j += 1
-			#	print ('This is the whole thing<<<<<<<<<<<<<<<<<<<<<< \n %s \n  >>>>>>>>>>>>>>that is the end' % (i,))
-		#		print j
-				code = clean(i[0].strip())
-#				print code
-				description = clean(i[1].strip())
-#				print description
-				location = clean(i[4].strip())
-				print ("location: %s" % location)
-				#print location
-				#print location
-				datetime_occurred = datetime.datetime.strptime(clean(i[7].strip()),'%m/%d/%Y %H:%M')
-			#	print datetime_occurred
-#				print datetime_occurred
-				datetime_reported = datetime.datetime.strptime(clean(i[9].strip()), '%m/%d/%Y %H:%M')
+				try:
+		#			print i
+					j += 1
+				#	print ('This is the whole thing<<<<<<<<<<<<<<<<<<<<<< \n %s \n  >>>>>>>>>>>>>>that is the end' % (i,))
+			#		print j
+					code = clean(i[0].strip())
+	#				print code
+					description = clean(i[1].strip())
+	#				print description
+					location = clean(i[4].strip())
+			#		print ("location: %s" % location)
+					#print location
+					#print location
+					datetime_occurred = datetime.datetime.strptime(clean(i[7].strip()),'%m/%d/%Y %H:%M')
+				#	print datetime_occurred
+	#				print datetime_occurred
+					datetime_reported = datetime.datetime.strptime(clean(i[9].strip()), '%m/%d/%Y %H:%M')
 
-#				print datetime_reported
-				reporting_officer = clean(i[12].strip())
-#				print reporting_officer
-				summary = clean(i[15].strip())
-#				print "Summary"
-				#use re to get rid of \n
-			#	print summary
+	#				print datetime_reported
+					reporting_officer = clean(i[12].strip())
+	#				print reporting_officer
+					summary = clean(i[15].strip())
+	#				print "Summary"
+					#use re to get rid of \n
+				#	print summary
 
-				properties = i[19].strip()
-		#		print properties
-				#### TEST REGION!!!
-			#	people = i[23].strip()
-			#	arrests = i[27].strip()
-			#	arrests += i[28].strip()
-				#########
+					properties = i[19].strip()
+			#		print properties
+					#### TEST REGION!!!
+				#	people = i[23].strip()
+				#	arrests = i[27].strip()
+				#	arrests += i[28].strip()
+					#########
 
-				
-				people = i[22].strip()
-			#	print people
-			#	print '\n\n\n\n\n'
-				arrests = i[26].strip()
-				arrests += i[27].strip()
-				#print arrests
-
-		#location is interesting because I'm eventually going to geocode these.
-		#		location_import, location_created = Location.objects.get_or_create(
-		#			address = location
-		#			)
-
-		#		officer_import, officer_created = Officer.objects.get_or_create(
-		#			name = reporting_officer
-		#			)
-
-				#arrest_pattern = re.compile('(.*)(AGE: )(\d+)\s+(SEX: )(M|F)(\s+)(.*)\n(.*)(CHARGE: )(\w+)\s+(.*)\n(.*)(AT: )(.*)(BY: )(.*)')
-				arrest_pattern = re.compile('(.*)(AGE: )(\d+)\s+(SEX: )(M|F)(\s+)(.*)\n(.*)(CHARGE: )(\w+)\s+(.*)\n(.*)(AT: )(.*)(BY: )(.*)')
-				arrests_re = arrest_pattern.findall(arrests)
-				#this is difficult to get my mind around. 
-
-				incident_crime, incident_created = Crime.objects.get_or_create(
-					#does description need further parsing?
-					name = description
-					)
-		#		print incident_crime
-
-				incident_location, incident_location_bool = Location.objects.get_or_create(
-					address = location
-					)
-				
-				incident_officer, io_bool = Officer.objects.get_or_create(
-					name = reporting_officer
-					)
-				print summary
-				incident_import, incident_created = Incident.objects.get_or_create(
-					code = code,
-					datetime_occurred = datetime_occurred,
-					datetime_reported = datetime_reported,			
-					#datetime_occurred = datetime_occurred.strftime( '%Y-%m-%d %H:%M:%S'),
-					#datetime_reported = datetime_reported.strftime('%Y-%m-%d %H:%M:%S'),
-					summary = summary,
-					officer = incident_officer,
-					location_occurred = incident_location,
-#					crimes = incident_crime
-					)
-				print incident_import
-
-				incident_import.crimes.add(incident_crime)
-				incident_import.save()
-
-				for a in arrests_re:
-					arrestee = 	clean(a[0].strip())
-					age = 		clean(a[2].strip())
-					sex = 		clean(a[4].strip())
-					address = 	clean(a[6].strip())
-					charge_text=clean(a[9].strip())
-					charge_code=clean(a[10].strip())
-					arrest_location = clean(a[13].strip())
-					arresting_officer = clean(a[15].strip())
-
-					print arrestee
-#					print age
-#					print sex
-#					print address
-#					print charge_text
-#					print charge_code
-#					print arrest_location
-#					print arresting_officer
-#					print "\n\n\n"
 					
-					crime_import, crime_bool = Crime.objects.get_or_create(
-						name = charge_text,
-						code = charge_code
-						)
-					print crime_import
-					address_import, address_bool = Location.objects.get_or_create(
-						address = address
-						)
+					people = i[22].strip()
+				#	print people
+				#	print '\n\n\n\n\n'
+					arrests = i[26].strip()
+					arrests += i[27].strip()
+					#print arrests
 
-					arrestee_import, arrestee_bool = Arrestee.objects.get_or_create(
-						name = arrestee,
-						age = age,
-						sex = sex,
-						address = address_import
-						)
-					arrest_location_import, arcreated = Location.objects.get_or_create(
-						address = arrest_location
-						)
-					arrest_import, arrest_bool = Arrest.objects.get_or_create(
-						arrestee = arrestee_import,
-						location = arrest_location_import,
-						datetime = datetime_occurred
+			#location is interesting because I'm eventually going to geocode these.
+			#		location_import, location_created = Location.objects.get_or_create(
+			#			address = location
+			#			)
 
-						)
-					print arrestee_import
-					arrest_import.charges.add(crime_import)
-					arrest_import.save()
+			#		officer_import, officer_created = Officer.objects.get_or_create(
+			#			name = reporting_officer
+			#			)
 
-					incident_import.arrests.add(arrest_import)
+					#arrest_pattern = re.compile('(.*)(AGE: )(\d+)\s+(SEX: )(M|F)(\s+)(.*)\n(.*)(CHARGE: )(\w+)\s+(.*)\n(.*)(AT: )(.*)(BY: )(.*)')
+					arrest_pattern = re.compile('(.*)(AGE: )(\d+)\s+(SEX: )(M|F)(\s+)(.*)\n(.*)(CHARGE: )(\w+)\s+(.*)\n(.*)(AT: )(.*)(BY: )(.*)')
+					arrests_re = arrest_pattern.findall(arrests)
+					#this is difficult to get my mind around. 
+	#				print description
+					incident_crime, incident_created = Crime.objects.get_or_create(
+						#does description need further parsing?
+						name = description
+						)
+	#				print incident_crime
+
+					incident_location, incident_location_bool = Location.objects.get_or_create(
+						address = location
+						)
+	#				print incident_location
+					incident_officer, io_bool = Officer.objects.get_or_create(
+						name = reporting_officer
+						)
+	#				print summary
+					incident_import, incident_created = Incident.objects.get_or_create(
+						code = code,
+						datetime_occurred = datetime_occurred,
+						datetime_reported = datetime_reported,			
+						#datetime_occurred = datetime_occurred.strftime( '%Y-%m-%d %H:%M:%S'),
+						#datetime_reported = datetime_reported.strftime('%Y-%m-%d %H:%M:%S'),
+						summary = summary,
+						officer = incident_officer,
+						location_occurred = incident_location,
+	#					crimes = incident_crime
+						)
+		#			print incident_import
+
+					incident_import.crimes.add(incident_crime)
 					incident_import.save()
+
+
+					for a in arrests_re:
+	#					print a
+						arrestee = 	clean(a[0].strip())
+						age = 		clean(a[2].strip())
+						sex = 		clean(a[4].strip())
+						address = 	clean(a[6].strip())
+						charge_text=clean(a[9].strip())
+						charge_code=clean(a[10].strip())
+						arrest_location = clean(a[13].strip())
+						arresting_officer = clean(a[15].strip())
+
+
+	#					print arrestee
+	#					print age
+	#					print sex
+	#					print address
+	#					print charge_text
+	#					print charge_code
+	#					print arrest_location
+	#					print arresting_officer
+	#					print "\n\n\n"
+						
+						crime_import, crime_bool = Crime.objects.get_or_create(
+							name = charge_text,
+							code = charge_code
+							)
+		#				print crime_import
+						address_import, address_bool = Location.objects.get_or_create(
+							address = address
+							)
+
+						arrestee_import, arrestee_bool = Arrestee.objects.get_or_create(
+							name = arrestee,
+							age = age,
+							sex = sex,
+							address = address_import
+							)
+						arrest_location_import, arcreated = Location.objects.get_or_create(
+							address = arrest_location
+							)
+						arrest_import, arrest_bool = Arrest.objects.get_or_create(
+							arrestee = arrestee_import,
+							location = arrest_location_import,
+							datetime = datetime_occurred
+
+							)
+#						print arrestee_import
+
+						arrest_import.charges.add(crime_import)
+						arrest_import.save()
+				
+					if arrests_re:
+						incident_import.arrests.add(arrest_import)
+						incident_import.save()
+					print ("%s successfully imported!" % code)
+
+				except:
+					print ("In %s, %s didn't import! Figure it out, dude!" % (t, code ))
+		
+					#raise Exception('Re does not work here, too long')
+			
 
 
 

@@ -9,11 +9,14 @@ class Location(models.Model):
 	point_location = models.PointField('GeoDjango point field of this location', null=True, geography=True, blank = True)
 	point_verified = models.BooleanField(default = False)
 
+	def __unicode__(self):
+		return self.address
+
 
 #infraction?
 class Crime(models.Model):
 	name = models.CharField(max_length = 255)
-	code = models.CharField(max_length= 50)
+	code = models.CharField(max_length= 255)
 	def __unicode__(self):
 		return self.name
 
@@ -91,7 +94,8 @@ class Incident(models.Model):
 	properties = models.ManyToManyField(Property, null = True)
 
 	def __unicode__(self):
-		
+		return self.code
+
 	def save(self, *args, **kwargs):
 		super(Incident, self).save(*args, **kwargs)			
 
