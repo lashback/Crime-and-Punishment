@@ -15,7 +15,7 @@ urlpatterns = patterns('',
     (r'^admin/', admin.site.urls),
 
     # Project URLs go here
-
+    url(r'^recent/', 'apps.incidents.views.most_recent_incidents', name = 'recent'),
 )
 
 urlpatterns += staticfiles_urlpatterns()
