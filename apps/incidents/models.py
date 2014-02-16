@@ -17,6 +17,16 @@ class Location(models.Model):
 class Crime(models.Model):
 	name = models.CharField(max_length = 255)
 	code = models.CharField(max_length= 255)
+	total_count = models.IntegerField(default=0)
+	nat_description = models.CharField(max_length=255, null = True, blank=True)
+
+	def get_count(self):
+		return self.incident_set.count()
+
+
+	def save(self, *args, **kwargs):
+		super(Crime, self).save(*args, **kwargs)		
+
 	def __unicode__(self):
 		return self.name
 

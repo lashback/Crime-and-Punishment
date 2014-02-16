@@ -29,8 +29,8 @@
 	{% for i in incidents %}
 
 	
-		<h1>{{ i.datetime_occurred}}</h1>
-		<h2>{{ i.location_occurred.address }}</h2>
+		<h2>{{ i.datetime_occurred}}</h2>
+		<h3>{{ i.location_occurred.address }}</h3>
 		{% for c in i.crimes.all %}
 			<h2>Crime:{{c.name}} | {{c.code}}</h2>
 		{% endfor %}
@@ -46,7 +46,7 @@
 
 		{% endif %}
 	
-
+	<hr>
 	{% endfor %}
 
 
